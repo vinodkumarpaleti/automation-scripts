@@ -1,0 +1,6 @@
+- name: Setup ELK all three components on Server 
+  hosts: localhost
+  gather_facts: yes
+  become: yes
+  roles:
+    - elk

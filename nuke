@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Script runs only in Workstation node where admin access is there.
+
+aws s3 ls &>/dev/null
+if [ $? -ne 0 ]; then
+    echo "Access Denied"
+    exit 1
+fi
+
+## Get Spot Requests
+
+## Get Route53
+
+## Get Parameter Store
+aws ssm describe-parameters | jq '.Parameters[].Name' >/tmp/list
+for i in `cat /tmp/list | xargs`; do
+  aws ssm delete-parameters --name $i | jq .DeletedParameters
+done
+
+## Get S3 Buckets
+for bucket in `aws s3 ls | awk '{print $NF}'`; do
+  aws s3 rm s3://$bucket --recursive
+done
+
+## Get ECR
+
+for repo in `aws ecr describe-repositories | jq '.repositories[].repositoryName' |xargs` ; do
+  aws ecr delete-repository  --repository-name $repo  --force
+done
+
+## Get Secret Store
+
+## Get KMS Keys
+
+aws kms list-keys | jq ".Keys[].KeyId" | sed -e 's/"//g'>/tmp/list
+for i in `cat /tmp/list`; do
+aws kms schedule-key-deletion --key-id $i --pending-window-in-days 8
+done
+
+
+## Get IAM Roles
+
+## Get IAM Policies
+

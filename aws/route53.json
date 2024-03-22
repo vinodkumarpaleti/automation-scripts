@@ -1,0 +1,11 @@
+{
+  "Comment": "Created Server - Private IP address - IPADDRESS , DNS Record - COMPONENT-dev.DOMAIN_NAME",
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "COMPONENT-dev.DOMAIN_NAME",
+      "Type": "A",
+      "TTL": 30,
+      "ResourceRecords": [{ "Value": "IPADDRESS"}]
+    }}]
+}

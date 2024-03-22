@@ -1,0 +1,21 @@
+- name: Install Elastic Search 
+  package:
+    name: https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{VERSION}}-x86_64.rpm
+    state: present 
+
+- name: Change the network host IP 
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml 
+    regex: "network.host"
+    line: "network.host: 0.0.0.0"
+  
+- name: Change discovery.seed_hosts 
+  lineinfile:
+    path: /etc/elasticsearch/elasticsearch.yml 
+    regex: "discovery.seed_hosts"
+    line: "discovery.seed_hosts: [\"0.0.0.0\"]"
+
+- name: Start elasticsearch 
+  service:
+    name: elasticsearch 
+    state: started 

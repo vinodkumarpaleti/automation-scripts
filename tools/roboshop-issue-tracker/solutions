@@ -1,0 +1,73 @@
+SOLUTION() {
+   case $1 in
+    99) ### SystemD file does not exist in remote server
+      echo -e "${N}"
+      echo "SystemD file missing"
+      echo -e "File - ${BD}$3${N} missing on the server, You can check by using ${TC}cat $3${N}"
+      echo "Ensure you create this file and it will work"
+      exit 1
+      ;;
+    100) ### Nginx service failed and not running
+      echo "DNS record is not working"
+      echo "Check if your domain is properly configured or not in https://dnschecker.org "
+      echo "Check if your DNS record is been showing in in https://dnschecker.org or not"
+      exit 1
+      ;;
+    200) ### Catalogue service address is not configured with 0.0.0.0
+      echo -e "Ensure you change the file ${TC}/etc/mongod.conf${N} file and change the listen address from 127.0.0.1 to 0.0.0.0"
+      echo -e "Then save the file, Restart service using ${TC}systemctl restart mongod${N}"
+      echo -e "Check the status using ${TC}nestat -lntp${N}"
+      exit 1
+      ;;
+    201) ### Catalogue Schema is lost due to public
+      echo -e "Categories on your frontend is not showing because catalogue schema does not exist"
+      echo -e "${HM}This is not your mistake, MongoDB have this behaviour${N}"
+      echo -e "Ref URL: https://www.mongodb.com/community/forums/t/database-deleted-auto/99623/7"
+      echo -e "${BLU}SOLUTION${N}: Just load the schema again, Run the following command in ${TC}Catalogue Server${N}"
+      command_print "mongo --host ${MONGO_IP} </app/schema/catalogue.js"
+      command_print "systemctl restart catalogue"
+      exit 1
+    ;;
+    202) ### Catalogue Schema is not loaded
+      echo -e "Categories on your frontend is not showing because catalogue schema does not exist"
+      echo -e "${BLU}SOLUTION${N}: Just load the schema again, Run the following command in ${TC}Catalogue Server${N}"
+      command_print "mongo --host ${MONGO_IP} </app/schema/catalogue.js"
+      command_print "systemctl restart catalogue"
+      exit 1
+    ;;
+    400) ### Redis service address is not configured with 0.0.0.0
+      echo -e "Ensure you change the file ${TC}/etc/redis.conf${N} file and change the listen address from 127.0.0.1 to 0.0.0.0"
+      echo -e "Then save the file, Restart service using ${TC}systemctl restart redis${N}"
+      echo -e "Check the status using ${TC}nestat -lntp${N}"
+      exit 1
+      ;;
+    401) ### Redis Port is not reachable from user service
+      echo
+      echo -e "Redis port is not reachable to outside servers"
+      echo -e "This is due to you are not using ${TC}allow-all${N} security group to the redis instance"
+      exit 1
+      ;;
+    500) ### Redis IP address not configured in SystemD service file
+      echo
+      echo -e "Ensure you configure the redis server details in User Service SystemD file"
+      echo -e "You can see the mis-configuration in this file ${TC}/etc/systemd/system/user.service${N}"
+      command_print "cat /etc/systemd/system/user.service"
+      remote_command $USE_IP "cat /etc/systemd/system/user.service" | grep --color -E '<REDIS-SERVER-IP>|$'
+      exit 1
+      ;;
+    900) ### RabbitMQ service is not running.
+      echo -e "RabbitMQ Service is not running, Ensure you install rabbitmq and start rabbitmq-servie"
+      exit 1
+      ;;
+    1000) ### RabbitMQ Username or Password missing in payment service file
+      echo -e "RabbitMQ Username or Password missing in the payment service file"
+      echo -e "Try checking the username and password with ${TC}cat /etc/systemd/system/payment.service${N}"
+      echo -e "Ensure you have username in AMQP_USER parameter and Password in AMQP_PASS Parameter"
+      echo -e "Observe the following command output"
+      command_print "cat /etc/systemd/system/payment.service"
+      remote_command $PAY_IP "cat /etc/systemd/system/payment.service" | grep --color -E 'AMQP_USER=|AMQP_PASS=|rabbitmq_appuser_password|$'
+      exit 1
+   esac
+}
+
+

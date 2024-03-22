@@ -1,0 +1,58 @@
+#!/bin/bash
+
+case $USER in
+  centos|root)
+    : ;;
+  *)
+    echo "This script runs only as centos user or root user"
+    exit 1
+  ;;
+esac
+
+sudo curl -s "https://raw.githubusercontent.com/learndevopsonline/scripts/master/common-functions.sh" -o /tmp/common-functions.sh
+#chmod 777 /tmp/common-functions.sh
+#source /root/scripts/common-functions.sh
+source /tmp/common-functions.sh
+
+## Supported OS's
+# CentOS 7
+if [ ! -f /etc/centos-release ]; then
+	error "Currently this setup works only for CentOS Operating System"
+	exit 1
+fi
+
+#EL=$(rpm -q basesystem | sed -e 's/\./ /g' |xargs -n1 | grep el)
+#if [ "$EL" != "el7" ]; then
+#	error "Currently this setup works only for CentOS-7 OS"
+#	exit 1
+#fi
+
+if [ "$1" == "clean" ]; then
+  cd /tmp
+  sudo -v &>/dev/null
+  [ $? -eq 0 ] && sudo rm -rf labautomation || rm -rf labautomation
+  echo $?
+  echo -e "\e[1;35m Cleanup Succeeded\e[0m"
+  exit 0
+else
+  if [ -d /tmp/labautomation ]; then
+    cd /tmp/labautomation
+    git pull &>/dev/null
+    if [ $? -ne 0 ]; then
+      cd ..
+      sudo -v &>/dev/null
+      [ $? -eq 0 ] && sudo rm -rf /tmp/lab* || rm -rf /tmp/lab*
+      git clone https://github.com/learndevopsonline/labautomation.git /tmp/labautomation &>/dev/null
+    fi
+  else
+    cd ..
+    git clone https://github.com/learndevopsonline/labautomation.git /tmp/labautomation &>/dev/null
+  fi
+fi
+
+if [ ! -f /tmp/labautomation/setup.sh ]; then
+  echo -e "\e[1;33m💡💡 Hint! Try Using \e[0m\e[1m'sudo labauto clean'\e[0m"
+  exit 1
+fi
+export AWS_PAGER=""
+bash /tmp/labautomation/aws.sh $*
